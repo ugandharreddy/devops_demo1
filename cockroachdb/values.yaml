@@ -18,6 +18,8 @@ image:
     # username: john_doe
     # password: changeme
 
+# Sets timestamp annotation for CockroachDB pods,
+# This is added for the purpose of rolling restarts with helm upgrade without any other configuration changes.
 
 # Additional labels to apply to all Kubernetes resources created by this chart.
 labels: {}
