@@ -1,0 +1,142 @@
+apiVersion: crdb.cockroachlabs.com/v1alpha1
+kind: CrdbNode
+metadata:
+  annotations:
+    crdb.cockroachlabs.com/cloudProvider: gcp
+  finalizers:
+  - crdbnode.crdb.cockroachlabs.com/finalizer
+  labels:
+    app: cockroachdb
+    crdb.cockroachlabs.com/cluster: cockroachdb
+    svc: cockroachdb
+  name: cockroachdb-0
+  namespace: default
+spec:
+  certificates:
+    externalCertificates:
+      caConfigMapName: cockroachdb-ca-secret-crt
+      httpSecretName: cockroachdb-client-secret
+      nodeSecretName: cockroachdb-node-secret
+      rootSqlClientSecretName: cockroachdb-client-secret
+  dataStore:
+    volumeClaimTemplate:
+      metadata:
+        name: datadir
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 100Gi
+        volumeMode: Filesystem
+      status: {}
+  grpcPort: 26258
+  httpPort: 8080
+  image: cockroachdb/cockroach:v25.1.5
+  localityLabels:
+  - country
+  - region
+  loggingConfigMapName: cockroachdb-log-config
+  nodeName: node0
+  persistentVolumeClaimRetentionPolicy:
+    whenDeleted: Retain
+  podTemplate:
+    metadata:
+      annotations:
+        crdb: is-cool
+      labels:
+        app.kubernetes.io/component: cockroachdb
+        app.kubernetes.io/instance: cockroachdb
+        app.kubernetes.io/name: cockroachdb
+    spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - podAffinityTerm:
+              labelSelector:
+                matchLabels:
+                  app.kubernetes.io/component: cockroachdb
+                  app.kubernetes.io/instance: cockroachdb
+                  app.kubernetes.io/name: cockroachdb
+              topologyKey: kubernetes.io/hostname
+            weight: 100
+      containers:
+      - env:
+        - name: STATEFULSET_NAME
+          value: cockroachdb
+        - name: STATEFULSET_FQDN
+          value: cockroachdb.default.svc.cluster.local
+        - name: COCKROACH_CHANNEL
+          value: kubernetes-helm
+        - name: GODEBUG
+          value: disablethp=1
+        - name: HOST_IP
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: status.hostIP
+        - name: GODEBUG
+          value: disablethp=1
+        image: cockroachdb/cockroach:v25.1.5
+        name: cockroachdb
+        resources:
+          limits:
+            cpu: "2"
+            memory: 4Gi
+          requests:
+            cpu: "1"
+            memory: 2Gi
+      imagePullSecrets:
+      - name: myregistrykey
+      initContainers:
+      - command:
+        - /bin/sh
+        - -c
+        - echo "Custom init container setup"; sleep 2
+        image: alpine:latest
+        imagePullPolicy: IfNotPresent
+        name: custom-init
+        resources:
+          requests:
+            cpu: 100m
+            memory: 64Mi
+      nodeSelector:
+        cloud.google.com/gke-nodepool: default-pool
+      priorityClassName: crdb-critical
+      serviceAccountName: cockroachdb
+      terminationGracePeriodSeconds: 300
+      tolerations:
+      - effect: NoSchedule
+        key: non-crdb
+        operator: Exists
+      topologySpreadConstraints:
+      - labelSelector:
+          matchLabels:
+            app.kubernetes.io/component: cockroachdb
+            app.kubernetes.io/instance: cockroachdb
+            app.kubernetes.io/name: cockroachdb
+        maxSkew: 1
+        topologyKey: topology.kubernetes.io/zone
+        whenUnsatisfiable: ScheduleAnyway
+      volumes:
+      - configMap:
+          items:
+          - key: config.yaml
+            path: custom-config.yaml
+          name: custom-config-map
+        name: custom-config
+  resourceRequirements: {}
+  sideCars: {}
+  sqlPort: 26257
+  startFlags:
+    omit: null
+    upsert:
+    - --join=${STATEFULSET_NAME}-0.${STATEFULSET_FQDN}:26257,${STATEFULSET_NAME}-1.${STATEFULSET_FQDN}:26257,${STATEFULSET_NAME}-2.${STATEFULSET_FQDN}:26257
+    - --advertise-host=$(hostname).${STATEFULSET_FQDN}
+    - --certs-dir=/cockroach/cockroach-certs/
+    - --cache=25%
+    - --max-sql-memory=25%
+  virtualCluster:
+    mode: primary
+status:
+  observedGeneration: 0

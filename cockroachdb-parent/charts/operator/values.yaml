@@ -1,0 +1,21 @@
+# Generated file, DO NOT EDIT. Source: build/templates/cockroachdb-parent/charts/operator/values.yaml
+# Default values for the operator chart.
+
+# image captures the container image settings for Operator pods.
+image:
+  # registry is the container registry where the image is stored.
+  registry: "us-docker.pkg.dev/releases-prod/self-hosted"
+  # repository defines the image repository.
+  repository: "cockroachdb-operator@sha256"
+  # pullPolicy specifies the image pull policy.
+  pullPolicy: IfNotPresent
+  # tag is the image tag.
+  tag: "9975a200e1e046a067e0350b970174ef6590468a2d07d7565b34d4eff16a032f"
+# certificate defines the certificate settings for the Operator.
+certificate:
+  # validForDays specifies the number of days the certificate is valid for.
+  validForDays: ""
+# numReplicas specifies the number of replicas for the Operator.
+numReplicas: 1
+# cloudRegion specifies the cloud region for the Operator.
+cloudRegion: "us-east1"

@@ -1,0 +1,9 @@
+dependencies:
+- name: operator
+  repository: file://charts/operator
+  version: 25.4.0-preview
+- name: cockroachdb
+  repository: file://charts/cockroachdb
+  version: 25.4.0-preview
+digest: sha256:d061699fcc65228d23d1e988a0510f8368e8a353ef80a1a4e6071667a395da54
+generated: "2025-11-19T20:29:50.726110283Z"
